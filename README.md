@@ -99,7 +99,7 @@ The application should now be running on `http://127.0.0.1:5000/`.
 
   ```json
   {
-    "short_url": "http://example.com"
+    "url": "http://example.com"
   }
   ```
 
