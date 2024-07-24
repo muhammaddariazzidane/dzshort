@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from flask import Flask, request, jsonify, redirect
+from flask import Flask, request, jsonify
 from typing import Optional
 from pydantic import BaseModel, ValidationError, EmailStr
 from pymongo import MongoClient
@@ -181,7 +181,7 @@ def create_short_url():
                     urls_collection.update_one({'_id': url_doc['_id']}, {'$set': {'user_id': decoded_token['user_id']}})
 
         short_url = url_doc['short_url']
-        return jsonify({'short_url': f"dzshort.vercel.app/{short_url}"}), 200
+        return jsonify({'short_url': f"dzshort.vercel.app/{short_url}", "long_url": url_data.url}), 200
 
     short_url_id = generate_unique_id()
 
@@ -198,10 +198,19 @@ def create_short_url():
     
     urls_collection.insert_one(new_url_doc)
 
-    return jsonify({'short_url': f"dzshort.vercel.app/{short_url_id}"}), 201
+    return jsonify({'short_url': f"dzshort.vercel.app/{short_url_id}", "long_url": url_data.url}), 201
+
+@app.get('/<short_url>/public')
+def get_detail(short_url):
+    url_doc = urls_collection.find_one({'short_url': short_url})
     
+    if url_doc:
+        return jsonify({'short_url': f"dzshort.vercel.app/{short_url}", "long_url": url_doc.url}), 200
+    else:
+        return jsonify({'message': 'No Url found'}), 404
+
 @app.get('/<short_url>')
-def redirect_to_original_url(short_url):
+def get_long_url(short_url):
     url_doc = urls_collection.find_one({'short_url': short_url})
     
     if url_doc:
@@ -216,7 +225,7 @@ def redirect_to_original_url(short_url):
             if decoded_token['user_id'] != url_doc['user_id']:
                 return jsonify({'message': 'Forbidden'}), 403
         
-        return redirect(url_doc['long_url'])
+            return jsonify({'short_url': f"dzshort.vercel.app/{short_url}", "long_url": url_doc.url}), 200
     else:
         return jsonify({'message': 'No Url found'}), 404
     
