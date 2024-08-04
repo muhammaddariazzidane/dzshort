@@ -200,12 +200,15 @@ def create_short_url():
 
     return jsonify({'short_url': f"dzshort.vercel.app/{short_url_id}", "long_url": url_data.url}), 201
 
-@app.get('/<short_url>')
-def get_detail(short_url):
-    url_doc = urls_collection.find_one({'short_url': short_url})
+@app.get('/<short_url_id>')
+def get_detail(short_url_id):
+    url_doc = urls_collection.find_one({'short_url': short_url_id})
     
     if url_doc:
-        return jsonify({'short_url': f"dzshort.vercel.app/{short_url}", "long_url": url_doc.url}), 200
+        return jsonify({
+            'long_url': url_doc['long_url'],
+            'short_url': url_doc['short_url']
+        }), 200
     else:
         return jsonify({'message': 'No Url found'}), 404
 
