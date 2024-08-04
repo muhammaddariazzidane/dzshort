@@ -200,7 +200,7 @@ def create_short_url():
 
     return jsonify({'short_url': f"dzshort.vercel.app/{short_url_id}", "long_url": url_data.url}), 201
 
-@app.get('/<short_url>/public')
+@app.get('/<short_url>')
 def get_detail(short_url):
     url_doc = urls_collection.find_one({'short_url': short_url})
     
@@ -209,25 +209,5 @@ def get_detail(short_url):
     else:
         return jsonify({'message': 'No Url found'}), 404
 
-@app.get('/<short_url>')
-def get_long_url(short_url):
-    url_doc = urls_collection.find_one({'short_url': short_url})
-    
-    if url_doc:
-        if 'user_id' in url_doc and url_doc['user_id']:
-            token = request.headers.get('Authorization')
-            if not token:
-                return jsonify({'message': 'Unauthorized'}), 401
-            token = token.split(" ")[1] 
-            decoded_token = verify_token(token)
-            if not decoded_token:
-                return jsonify({'message': 'Invalid or expired token'}), 403
-            if decoded_token['user_id'] != url_doc['user_id']:
-                return jsonify({'message': 'Forbidden'}), 403
-        
-            return jsonify({'short_url': f"dzshort.vercel.app/{short_url}", "long_url": url_doc.url}), 200
-    else:
-        return jsonify({'message': 'No Url found'}), 404
-    
 if __name__ == '__main__':
     app.run(debug=True)
